@@ -13,6 +13,18 @@
 
     <!-- Right: actions -->
     <div class="navbar-right">
+      <!-- Storefront link -->
+      <router-link
+        to="/"
+        target="_blank"
+        class="storefront-link"
+        title="Buka Toko Publik"
+      >
+        <Store :size="15" />
+        <span class="hidden sm:inline">Lihat Toko</span>
+        <ExternalLink :size="12" class="opacity-60" />
+      </router-link>
+
       <!-- Dark mode toggle -->
       <button
         v-if="appConfig.features.darkMode"
@@ -24,10 +36,8 @@
         <Sun v-else :size="18" />
       </button>
 
-      <!-- Notifications bell -->
-      <button v-if="appConfig.features.notifications" class="icon-btn" title="Notifications">
-        <Bell :size="18" />
-      </button>
+      <!-- Notifications dropdown -->
+      <NotificationDropdown v-if="appConfig.features.notifications" />
 
       <!-- User avatar dropdown -->
       <div class="user-dropdown" @click="dropdownOpen = !dropdownOpen">
@@ -53,8 +63,9 @@
 </template>
 
 <script setup lang="ts">
-import { Bell, ChevronDown, LogOut, Menu, Moon, Sun } from '@lucide/vue'
+import { ChevronDown, ExternalLink, LogOut, Menu, Moon, Store, Sun } from '@lucide/vue'
 import AppBreadcrumb from './AppBreadcrumb.vue'
+import NotificationDropdown from '@/components/admin/NotificationDropdown.vue'
 import { useUiStore } from '@/core/stores/ui.store'
 import { useAuth } from '@/core/composables/useAuth'
 import appConfig from '@/app.config'
@@ -239,6 +250,27 @@ onMounted(() => {
 .dropdown-item:hover {
   background: #fee2e2;
   color: #b91c1c;
+}
+
+.storefront-link {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.15s;
+}
+
+.storefront-link:hover {
+  background: var(--bg-surface-hover);
+  color: var(--color-primary, #10b981);
+  border-color: var(--color-primary, #10b981);
 }
 
 /* Dropdown transition */

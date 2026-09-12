@@ -3,7 +3,11 @@ import { createPinia } from 'pinia'
 import { createHead } from '@vueuse/head'
 import App from './App.vue'
 import router from './router'
+import { initMockData } from '@/mock'
 import './style.css'
+
+// Inisialisasi mock data starter kit (jika belum ada di localStorage)
+initMockData()
 
 // Google Fonts — Inter
 const link = document.createElement('link')

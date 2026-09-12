@@ -1,72 +1,72 @@
 // src/core/router/navigation.ts
-// 🔑 TAMBAH MENU DI SINI
-// Ini adalah sumber kebenaran untuk semua menu di sidebar.
-// Setiap item otomatis muncul di sidebar sesuai roles & permissions.
+// 🔑 MENU SIDEBAR ADMIN CEPAT UI OLSHOP
+// Setiap item otomatis muncul di sidebar admin.
 
 import type { NavItem } from '@/core/types'
 
 export const navigationItems: NavItem[] = [
   {
-    title: 'Dashboard',
+    title: 'Ringkasan Toko',
     icon: 'LayoutDashboard',
-    route: '/dashboard',
+    route: '/admin',
     order: 1,
   },
   {
-    title: 'Analytics',
-    icon: 'BarChart3',
-    route: '/analytics',
+    title: 'Manajemen Produk',
+    icon: 'Package',
+    route: '/admin/products',
     order: 2,
   },
-
-  // --- Divider group: Management ---
   {
-    title: 'Users',
-    icon: 'Users',
-    route: '/users',
-    order: 10,
-    roles: ['admin'],
-  },
-  {
-    title: 'Roles & Permissions',
-    icon: 'ShieldCheck',
-    route: '/roles',
-    order: 11,
-    roles: ['admin'],
-  },
-
-  // --- Nested menu example ---
-  {
-    title: 'Settings',
-    icon: 'Settings',
-    order: 99,
-    children: [
-      {
-        title: 'General',
-        icon: 'SlidersHorizontal',
-        route: '/settings/general',
-      },
-      {
-        title: 'Security',
-        icon: 'Lock',
-        route: '/settings/security',
-      },
-    ],
-  },
-  {
-    title: 'Products',
-    icon: 'Package',
-    route: '/products',
+    title: 'Manajemen Pesanan',
+    icon: 'ShoppingCart',
+    route: '/admin/orders',
     order: 3,
   },
-
-  // --- UI Kit Showcase (Bootstrap-style reference) ---
   {
-    title: 'UI Kit',
+    title: 'Data Pelanggan',
+    icon: 'Users',
+    route: '/admin/customers',
+    order: 4,
+  },
+  {
+    title: 'Voucher & Diskon',
+    icon: 'TicketPercent',
+    route: '/admin/vouchers',
+    order: 5,
+  },
+  {
+    title: 'Flash Sale',
+    icon: 'Zap',
+    route: '/admin/flash-sale',
+    order: 6,
+    badge: 'Aktif',
+    badgeVariant: 'warning',
+  },
+  {
+    title: 'Ulasan Produk',
+    icon: 'Star',
+    route: '/admin/reviews',
+    order: 7,
+  },
+  {
+    title: 'Laporan Penjualan',
+    icon: 'BarChart3',
+    route: '/admin/reports',
+    order: 8,
+  },
+  {
+    title: 'Pengaturan Toko',
+    icon: 'Store',
+    route: '/admin/settings',
+    order: 9,
+  },
+
+  // --- UI Kit Showcase ---
+  {
+    title: 'UI Kit Showcase',
     icon: 'Boxes',
     order: 20,
-    badge: 'New',
-    badgeVariant: 'success',
     children: [
       {
         title: 'Components',
