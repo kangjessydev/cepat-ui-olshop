@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Home",
+    "catalog": "Products",
+    "tracking": "Track Order",
+    "cart": "Cart",
+    "wishlist": "Wishlist",
+    "account": "My Account",
+    "login": "Sign In",
+    "register": "Sign Up",
+    "admin": "Admin Dashboard"
+  },
+  "home": {
+    "flash_sale": "Super Flash Sale",
+    "ends_in": "Ends in",
+    "view_all": "View All",
+    "categories": "Featured Categories",
+    "bestsellers": "Bestsellers",
+    "new_arrivals": "New Arrivals"
+  },
+  "catalog": {
+    "filter": "Filter Products",
+    "search_placeholder": "Search product name or category...",
+    "sort_by": "Sort By",
+    "sort_latest": "Latest",
+    "sort_bestseller": "Bestselling",
+    "sort_price_asc": "Price: Low to High",
+    "sort_price_desc": "Price: High to Low",
+    "load_more": "Load More Products",
+    "no_products": "No products found"
+  },
+  "cart": {
+    "title": "Shopping Cart",
+    "empty": "Your Cart is Empty",
+    "empty_desc": "Let's explore and discover great products for you!",
+    "voucher_placeholder": "Enter promo code",
+    "apply_voucher": "Apply",
+    "summary": "Order Summary",
+    "subtotal": "Items Subtotal",
+    "discount": "Promo Discount",
+    "checkout_btn": "Proceed to Checkout"
+  },
+  "checkout": {
+    "title": "Checkout",
+    "shipping_address": "Shipping Address",
+    "courier": "Select Shipping Courier",
+    "payment_method": "Payment Method",
+    "place_order": "Place Order Now"
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <title>Pesanan Dikirim</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f4f5f7; margin: 0; padding: 24px; color: #1f2937; }
+    .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .header { background: #059669; padding: 32px 24px; text-align: center; color: #ffffff; }
+    .header h1 { margin: 0 0 8px 0; font-size: 24px; }
+    .header p { margin: 0; opacity: 0.9; font-size: 14px; }
+    .content { padding: 32px 24px; }
+    .tracking-box { background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 20px; text-align: center; margin: 24px 0; }
+    .awb-code { font-size: 22px; font-weight: 700; color: #065f46; letter-spacing: 2px; margin: 8px 0; }
+    .btn { display: inline-block; background: #059669; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; font-size: 14px; text-align: center; }
+    .footer { text-align: center; padding: 24px; font-size: 12px; color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <div class="header">
+      <h1>Pesanan Anda Sedang Menuju Alamat! 🚚</h1>
+      <p>Paket telah diserahkan kepada kurir ekspedisi</p>
+    </div>
+    <div class="content">
+      <p>Halo <strong>{{customer_name}}</strong>,</p>
+      <p>Kabar gembira! Pesanan Anda dengan nomor <strong>{{order_number}}</strong> telah dikirim melalui <strong>{{courier_name}}</strong>.</p>
+
+      <div class="tracking-box">
+        <div style="font-size: 13px; color: #047857; text-transform: uppercase; font-weight: 600;">Nomor Resi Pengiriman</div>
+        <div class="awb-code">{{tracking_number}}</div>
+        <div style="font-size: 13px; color: #065f46;">Kurir: {{courier_service}}</div>
+      </div>
+
+      <p style="font-size: 14px; color: #4b5563;">Anda dapat melacak pergerakan paket secara berkala menggunakan tombol di bawah ini:</p>
+
+      <div style="text-align: center; margin: 32px 0;">
+        <a href="{{tracking_url}}" class="btn">Lacak Paket Sekarang</a>
+      </div>
+    </div>
+    <div class="footer">
+      <p>&copy; {{current_year}} Cepat Store. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>

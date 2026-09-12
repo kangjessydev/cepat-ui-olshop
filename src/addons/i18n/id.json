@@ -1,0 +1,50 @@
+{
+  "nav": {
+    "home": "Beranda",
+    "catalog": "Katalog Produk",
+    "tracking": "Lacak Pesanan",
+    "cart": "Keranjang",
+    "wishlist": "Favorit",
+    "account": "Akun Saya",
+    "login": "Masuk",
+    "register": "Daftar",
+    "admin": "Dashboard Admin"
+  },
+  "home": {
+    "flash_sale": "Super Flash Sale",
+    "ends_in": "Berakhir dalam",
+    "view_all": "Lihat Semua",
+    "categories": "Kategori Pilihan",
+    "bestsellers": "Produk Terpopuler",
+    "new_arrivals": "Koleksi Terbaru"
+  },
+  "catalog": {
+    "filter": "Filter Produk",
+    "search_placeholder": "Cari nama atau kategori produk...",
+    "sort_by": "Urutkan",
+    "sort_latest": "Terbaru",
+    "sort_bestseller": "Terlaris",
+    "sort_price_asc": "Harga: Rendah ke Tinggi",
+    "sort_price_desc": "Harga: Tinggi ke Rendah",
+    "load_more": "Muat Lebih Banyak Produk",
+    "no_products": "Tidak ada produk ditemukan"
+  },
+  "cart": {
+    "title": "Keranjang Belanja",
+    "empty": "Keranjang Belanja Kosong",
+    "empty_desc": "Yuk, mulai belanja dan pilih produk terbaik untukmu!",
+    "voucher_placeholder": "Masukkan kode promo",
+    "apply_voucher": "Gunakan",
+    "summary": "Ringkasan Belanja",
+    "subtotal": "Total Harga Produk",
+    "discount": "Diskon Promo",
+    "checkout_btn": "Lanjut ke Pembayaran"
+  },
+  "checkout": {
+    "title": "Checkout Pembayaran",
+    "shipping_address": "Alamat Pengiriman",
+    "courier": "Pilih Ekspedisi Pengiriman",
+    "payment_method": "Metode Pembayaran",
+    "place_order": "Bayar Sekarang"
+  }
+}
