@@ -23,6 +23,8 @@ declare module 'vue' {
     BaseCard: typeof import('./components/BaseCard.vue')['default']
     BaseDatePicker: typeof import('./components/BaseDatePicker.vue')['default']
     BaseModal: typeof import('./components/BaseModal.vue')['default']
+    BaseSkeleton: typeof import('./components/base/BaseSkeleton.vue')['default']
+    BaseSpinner: typeof import('./components/base/BaseSpinner.vue')['default']
     BaseTabs: typeof import('./components/BaseTabs.vue')['default']
     DataTable: typeof import('./components/DataTable/DataTable.vue')['default']
     FormField: typeof import('./components/AutoForm/FormField.vue')['default']

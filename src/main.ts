@@ -2,7 +2,7 @@ import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { createHead } from '@vueuse/head'
 import App from './App.vue'
-import router from './core/router'
+import router from './router'
 import './style.css'
 
 // Google Fonts — Inter
