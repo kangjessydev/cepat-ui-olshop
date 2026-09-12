@@ -81,6 +81,7 @@
                   <img
                     :src="product.images[0]"
                     :alt="product.name"
+                    loading="lazy"
                     class="w-10 h-10 rounded-lg object-cover border border-slate-200 dark:border-slate-800 shrink-0"
                   />
                   <div class="min-w-0 max-w-xs sm:max-w-md">
@@ -140,9 +141,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { Plus, Download, Search, Edit, Trash2 } from '@lucide/vue'
-import { getMockProducts, saveMockProducts } from '@/mock'
+import { productRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { exportToCsv } from '@/utils/exportCsv'
 import { useToast } from '@/composables/useToast'
@@ -150,10 +151,18 @@ import StockIndicator from '@/components/admin/StockIndicator.vue'
 import type { Product } from '@/types'
 
 const toast = useToast()
-const products = ref<Product[]>(getMockProducts())
+const products = ref<Product[]>([])
 const searchQuery = ref('')
 type TabType = 'all' | 'active' | 'low_stock' | 'out_of_stock'
 const activeTab = ref<TabType>('all')
+
+onMounted(async () => {
+  await loadProducts()
+})
+
+async function loadProducts() {
+  products.value = await productRepository.getAll()
+}
 
 const statusTabs = computed<{ id: TabType; label: string; count: number }[]>(() => [
   { id: 'all', label: 'Semua', count: products.value.length },
@@ -181,10 +190,10 @@ const filteredProducts = computed(() => {
   })
 })
 
-function deleteProduct(id: string) {
+async function deleteProduct(id: string) {
   if (confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
-    products.value = products.value.filter(p => p.id !== id)
-    saveMockProducts(products.value)
+    await productRepository.delete(id)
+    await loadProducts()
     toast.success('Produk berhasil dihapus')
   }
 }

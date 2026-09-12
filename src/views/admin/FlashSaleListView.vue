@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { FlashSaleEvent, FlashSaleItem, Product } from '@/types'
 import { flashSaleSeed } from '@/mock/vouchers.seed'
-import { productsSeed } from '@/mock/products.seed'
+import { productRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { toast } from 'vue-sonner'
 
@@ -14,9 +14,9 @@ const selectedProductId = ref('')
 const itemFlashPrice = ref(0)
 const itemStockQuota = ref(20)
 
-onMounted(() => {
+onMounted(async () => {
   loadFlashSale()
-  loadCatalogProducts()
+  await loadCatalogProducts()
 })
 
 function loadFlashSale() {
@@ -33,17 +33,8 @@ function loadFlashSale() {
   }
 }
 
-function loadCatalogProducts() {
-  const saved = localStorage.getItem('cepat_products')
-  if (saved) {
-    try {
-      allProducts.value = JSON.parse(saved)
-    } catch {
-      allProducts.value = [...productsSeed]
-    }
-  } else {
-    allProducts.value = [...productsSeed]
-  }
+async function loadCatalogProducts() {
+  allProducts.value = await productRepository.getAll()
 }
 
 function saveFlashSale() {

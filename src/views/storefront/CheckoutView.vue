@@ -5,7 +5,9 @@ import { useCartStore } from '@/stores/cart.store'
 import { useCustomerAuthStore } from '@/stores/customerAuth.store'
 import { useStoreSettingsStore } from '@/stores/settings.store'
 import type { Order, CustomerAddress } from '@/types'
+import type { PaymentMethodOption } from '@/types/payment'
 import { orderRepository, productRepository } from '@/repositories'
+import { paymentAdapter } from '@/adapters/payment'
 import CheckoutStepper from '@/components/storefront/CheckoutStepper.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { useSeo } from '@/composables/useSeo'
@@ -22,7 +24,11 @@ useSeo({
   description: 'Selesaikan transaksi belanja Anda dengan aman dan cepat di Cepat Olshop.'
 })
 
-onMounted(() => {
+const availablePaymentMethods = ref<PaymentMethodOption[]>([])
+const selectedPaymentMethod = ref<string>('bank_transfer')
+const selectedBank = ref<'BCA' | 'Mandiri'>('BCA')
+
+onMounted(async () => {
   if (cartStore.items.length === 0) {
     toast.error('Keranjang belanja kosong')
     router.push('/cart')
@@ -43,6 +49,12 @@ onMounted(() => {
       shippingAddress.value.postalCode = defaultAddr.postalCode
     }
   }
+
+  // Load payment methods from adapter
+  availablePaymentMethods.value = await paymentAdapter.getAvailableMethods()
+  if (availablePaymentMethods.value.length > 0) {
+    selectedPaymentMethod.value = availablePaymentMethods.value[0].id
+  }
 })
 
 // Form State
@@ -61,8 +73,6 @@ const customerEmail = ref(authStore.customer?.email || 'pembeli@cepatolshop.id')
 
 // Selected Courier
 const selectedCourierId = ref<string>('jne-reg')
-const selectedPaymentMethod = ref<'bank_transfer' | 'cod'>('bank_transfer')
-const selectedBank = ref<'BCA' | 'Mandiri'>('BCA')
 
 const isSubmitting = ref(false)
 
@@ -98,51 +108,71 @@ async function handlePlaceOrder() {
 
   isSubmitting.value = true
 
-  const orderId = `ord-${Date.now()}`
-  const orderNumber = `ORD-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Math.floor(100 + Math.random() * 900))}`
-  const now = new Date().toISOString()
+  try {
+    const orderId = `ord-${Date.now()}`
+    const orderNumber = `ORD-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Math.floor(100 + Math.random() * 900))}`
+    const now = new Date().toISOString()
 
-  const newOrder: Order = {
-    id: orderId,
-    orderNumber,
-    customerId: authStore.customer?.id || `guest-${Date.now()}`,
-    customerName: shippingAddress.value.recipientName,
-    customerEmail: customerEmail.value,
-    customerPhone: shippingAddress.value.phone,
-    items: [...cartStore.items],
-    subtotal: cartStore.subtotal,
-    shippingCost: shippingCost.value,
-    discountAmount: cartStore.discountAmount,
-    totalAmount: finalTotalAmount.value,
-    status: selectedPaymentMethod.value === 'cod' ? 'processing' : 'pending_payment',
-    shipping: {
-      courierName: activeCourier.value?.courierName || 'JNE',
-      serviceName: activeCourier.value?.name || 'JNE Regular',
-      cost: shippingCost.value,
-      estimatedDelivery: activeCourier.value?.estimatedDays || '2-3 Hari',
-      address: { ...shippingAddress.value }
-    },
-    payment: {
-      method: selectedPaymentMethod.value,
-      bankName: selectedPaymentMethod.value === 'bank_transfer' ? selectedBank.value : undefined,
-      accountNumber: selectedBank.value === 'BCA' ? '8830123456' : '1680009876543',
-      accountName: 'PT CEPAT OLSHOP INDONESIA',
-      status: selectedPaymentMethod.value === 'cod' ? 'unpaid' : 'unpaid'
-    },
-    timeline: [
-      {
-        id: `tl-${Date.now()}`,
-        title: 'Pesanan Berhasil Dibuat',
-        description: selectedPaymentMethod.value === 'cod'
-          ? 'Pesanan menggunakan metode Bayar di Tempat (COD) dan siap diproses'
-          : 'Menunggu konfirmasi pembayaran dari pembeli',
-        timestamp: now,
-        status: selectedPaymentMethod.value === 'cod' ? 'processing' : 'pending_payment',
-        actor: 'customer'
-      }
-    ],
-    customerNotes: shippingAddress.value.notes,
-    createdAt: now,
+    // Process payment through adapter
+    const paymentResult = await paymentAdapter.createPayment({
+      orderId,
+      orderNumber,
+      amount: finalTotalAmount.value,
+      customerName: shippingAddress.value.recipientName,
+      customerEmail: customerEmail.value,
+      customerPhone: shippingAddress.value.phone,
+      items: [...cartStore.items],
+      paymentMethodId: selectedPaymentMethod.value
+    })
+
+    const isCod = selectedPaymentMethod.value === 'cod'
+
+    const newOrder: Order = {
+      id: orderId,
+      orderNumber,
+      customerId: authStore.customer?.id || `guest-${Date.now()}`,
+      customerName: shippingAddress.value.recipientName,
+      customerEmail: customerEmail.value,
+      customerPhone: shippingAddress.value.phone,
+      items: [...cartStore.items],
+      subtotal: cartStore.subtotal,
+      shippingCost: shippingCost.value,
+      discountAmount: cartStore.discountAmount,
+      totalAmount: finalTotalAmount.value,
+      status: isCod ? 'processing' : 'pending_payment',
+      shipping: {
+        courierName: activeCourier.value?.courierName || 'JNE',
+        serviceName: activeCourier.value?.name || 'JNE Regular',
+        cost: shippingCost.value,
+        estimatedDelivery: activeCourier.value?.estimatedDays || '2-3 Hari',
+        address: { ...shippingAddress.value }
+      },
+      payment: {
+        method: selectedPaymentMethod.value,
+        provider: paymentResult.provider,
+        reference: paymentResult.reference,
+        paymentUrl: paymentResult.paymentUrl,
+        qrString: paymentResult.qrString,
+        bankName: paymentResult.bankName || (selectedPaymentMethod.value === 'bank_transfer' ? selectedBank.value : undefined),
+        accountNumber: paymentResult.accountNumber || (selectedBank.value === 'BCA' ? '8830123456' : '1680009876543'),
+        accountName: paymentResult.accountName || 'PT CEPAT OLSHOP INDONESIA',
+        expiryDate: paymentResult.expiryDate,
+        status: isCod ? 'unpaid' : 'unpaid'
+      },
+      timeline: [
+        {
+          id: `tl-${Date.now()}`,
+          title: 'Pesanan Berhasil Dibuat',
+          description: isCod
+            ? 'Pesanan menggunakan metode Bayar di Tempat (COD) dan siap diproses'
+            : (paymentResult.message || 'Menunggu konfirmasi pembayaran dari pembeli'),
+          timestamp: now,
+          status: isCod ? 'processing' : 'pending_payment',
+          actor: 'customer'
+        }
+      ],
+      customerNotes: shippingAddress.value.notes,
+      createdAt: now,
     updatedAt: now
   }
 
@@ -157,14 +187,16 @@ async function handlePlaceOrder() {
     }))
   )
 
-  // Clear Cart
-  cartStore.clearCart()
+    // Clear Cart
+    cartStore.clearCart()
 
-  setTimeout(() => {
     isSubmitting.value = false
     toast.success('Pesanan berhasil dibuat!')
     router.push(`/orders/${newOrder.id}/success`)
-  }, 600)
+  } catch (err: any) {
+    isSubmitting.value = false
+    toast.error(err?.message || 'Gagal memproses pesanan')
+  }
 }
 </script>
 
@@ -318,28 +350,29 @@ async function handlePlaceOrder() {
           </div>
 
           <div class="space-y-3">
-            <!-- Bank Transfer Option -->
             <div
+              v-for="method in availablePaymentMethods"
+              :key="method.id"
               :class="[
                 'p-4 rounded-xl border-2 cursor-pointer transition-all space-y-3',
-                selectedPaymentMethod === 'bank_transfer'
+                selectedPaymentMethod === method.id
                   ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
                   : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
               ]"
-              @click="selectedPaymentMethod = 'bank_transfer'"
+              @click="selectedPaymentMethod = method.id"
             >
               <div class="flex items-center justify-between">
                 <div>
-                  <span class="font-bold text-xs text-gray-900 dark:text-gray-100">Transfer Bank Otomatis / Manual</span>
-                  <p class="text-[11px] text-gray-400">Transfer ke rekening resmi toko dan unggah bukti transfer</p>
+                  <span class="font-bold text-xs text-gray-900 dark:text-gray-100">{{ method.name }}</span>
+                  <p class="text-[11px] text-gray-400">{{ method.description }}</p>
                 </div>
-                <div v-if="selectedPaymentMethod === 'bank_transfer'" class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                <div v-if="selectedPaymentMethod === method.id" class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
                   <Check :size="10" />
                 </div>
               </div>
 
-              <!-- Bank Selection -->
-              <div v-if="selectedPaymentMethod === 'bank_transfer'" class="flex items-center gap-3 pt-2">
+              <!-- Bank Selection for manual bank transfer -->
+              <div v-if="selectedPaymentMethod === method.id && method.id === 'bank_transfer'" class="flex items-center gap-3 pt-2">
                 <label class="flex items-center gap-2 text-xs font-semibold cursor-pointer">
                   <input v-model="selectedBank" type="radio" value="BCA" class="text-emerald-600" />
                   <span>Bank BCA</span>
@@ -348,27 +381,6 @@ async function handlePlaceOrder() {
                   <input v-model="selectedBank" type="radio" value="Mandiri" class="text-emerald-600" />
                   <span>Bank Mandiri</span>
                 </label>
-              </div>
-            </div>
-
-            <!-- COD Option -->
-            <div
-              :class="[
-                'p-4 rounded-xl border-2 cursor-pointer transition-all',
-                selectedPaymentMethod === 'cod'
-                  ? 'border-emerald-600 bg-emerald-50/30 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
-                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
-              ]"
-              @click="selectedPaymentMethod = 'cod'"
-            >
-              <div class="flex items-center justify-between">
-                <div>
-                  <span class="font-bold text-xs text-gray-900 dark:text-gray-100">Bayar di Tempat (COD)</span>
-                  <p class="text-[11px] text-gray-400">Bayar tunai ke kurir saat paket pesanan tiba di rumah Anda</p>
-                </div>
-                <div v-if="selectedPaymentMethod === 'cod'" class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
-                  <Check :size="10" />
-                </div>
               </div>
             </div>
           </div>
@@ -391,7 +403,7 @@ async function handlePlaceOrder() {
               :key="item.id"
               class="flex items-center gap-3 pt-2 first:pt-0"
             >
-              <img :src="item.productImage" :alt="item.productName" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+              <img :src="item.productImage" :alt="item.productName" loading="lazy" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
               <div class="flex-1 min-w-0 text-xs">
                 <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ item.productName }}</p>
                 <p class="text-gray-400 text-[10px]">x{{ item.quantity }} • {{ formatRupiah(item.price) }}</p>

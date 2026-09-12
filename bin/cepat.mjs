@@ -870,6 +870,7 @@ function useAdapter(category, type, options = {}) {
     console.log(`  • ${c.bold}shipping:${c.reset} manual, rajaongkir`)
     console.log(`  • ${c.bold}storage:${c.reset} local, indexed-db, cloudinary`)
     console.log(`  • ${c.bold}notification:${c.reset} polling, websocket`)
+    console.log(`  • ${c.bold}payment:${c.reset} manual, xendit`)
     console.log(`  • ${c.bold}auth:${c.reset} mock, sanctum\n`)
     return
   }
@@ -968,6 +969,40 @@ export const notificationAdapter: NotificationAdapter = new WebSocketNotificatio
       return
     }
     console.error(`${c.red}Unknown notification type: ${t}.${c.reset} Available: polling, websocket`)
+    return
+  }
+
+  if (cat === 'payment') {
+    const file = path.join(ROOT, 'src/adapters/payment/index.ts')
+    if (t === 'manual') {
+      const code = `import type { PaymentAdapter } from './adapter.interface'
+import { ManualPaymentAdapter } from './manual.adapter'
+
+export * from './adapter.interface'
+export * from './manual.adapter'
+export * from './xendit.adapter'
+
+export const paymentAdapter: PaymentAdapter = new ManualPaymentAdapter()
+`
+      fs.writeFileSync(file, code, 'utf-8')
+      console.log(`\n${c.green}${c.bold}✓ Switched active Payment Adapter to ManualPaymentAdapter${c.reset}\n`)
+      return
+    }
+    if (t === 'xendit') {
+      const code = `import type { PaymentAdapter } from './adapter.interface'
+import { XenditPaymentAdapter } from './xendit.adapter'
+
+export * from './adapter.interface'
+export * from './manual.adapter'
+export * from './xendit.adapter'
+
+export const paymentAdapter: PaymentAdapter = new XenditPaymentAdapter()
+`
+      fs.writeFileSync(file, code, 'utf-8')
+      console.log(`\n${c.green}${c.bold}✓ Switched active Payment Adapter to XenditPaymentAdapter${c.reset}\n`)
+      return
+    }
+    console.error(`${c.red}Unknown payment type: ${t}.${c.reset} Available: manual, xendit`)
     return
   }
 
@@ -1138,6 +1173,12 @@ switch (command) {
     break
   case 'addon:i18n':
     addonI18n()
+    break
+  case 'addon:payment':
+  case 'addon:xendit':
+  case 'addon:payment-xendit':
+    useAdapter('payment', arg1 || 'xendit', parsed.options)
+    console.log(`  ${c.dim}To customize Xendit keys, update VITE_XENDIT_PUBLIC_KEY in .env${c.reset}\n`)
     break
   case 'addon:realtime':
     useAdapter('notification', 'websocket', parsed.options)

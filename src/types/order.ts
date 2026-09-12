@@ -38,13 +38,18 @@ export interface OrderShippingInfo {
 }
 
 export interface OrderPaymentInfo {
-  method: 'bank_transfer' | 'cod' | 'ewallet'
+  method: 'bank_transfer' | 'cod' | 'ewallet' | string
+  provider?: 'manual' | 'xendit' | 'midtrans' | string
+  reference?: string
+  paymentUrl?: string
+  qrString?: string
   bankName?: string
   accountNumber?: string
   accountName?: string
   proofImage?: string // URL bukti transfer
   paidAt?: string
   confirmedAt?: string
+  expiryDate?: string
   status: 'unpaid' | 'verification_pending' | 'paid' | 'failed'
 }
 

@@ -1,7 +1,7 @@
-import type { Product } from '@/types'
+import type { Product, ProductCategory } from '@/types'
 import type { IProductRepository } from './types'
 import { STORAGE_KEYS, getStorageItem, setStorageItem } from '@/constants/storage'
-import { productsSeed } from '@/mock/products.seed'
+import { productsSeed, categoriesSeed } from '@/mock/products.seed'
 import { useAdminApi, useCustomerApi } from '@/core/composables/useApi'
 
 export class LocalProductRepository implements IProductRepository {
@@ -29,6 +29,18 @@ export class LocalProductRepository implements IProductRepository {
   async getById(id: string): Promise<Product | null> {
     const products = this.load()
     return products.find(p => p.id === id) || null
+  }
+
+  async getCategories(): Promise<ProductCategory[]> {
+    const raw = getStorageItem(STORAGE_KEYS.CATEGORIES, 'cepat_categories')
+    if (raw) {
+      try {
+        return JSON.parse(raw)
+      } catch {
+        return [...categoriesSeed]
+      }
+    }
+    return [...categoriesSeed]
   }
 
   async create(productData: Omit<Product, 'id'>): Promise<Product> {
@@ -97,6 +109,11 @@ export class ApiProductRepository implements IProductRepository {
 
   async getById(id: string): Promise<Product | null> {
     return await this.customerApi.get<Product>(`/products/${id}`)
+  }
+
+  async getCategories(): Promise<ProductCategory[]> {
+    const res = await this.customerApi.get<ProductCategory[]>('/categories')
+    return res || []
   }
 
   async create(product: Omit<Product, 'id'>): Promise<Product> {

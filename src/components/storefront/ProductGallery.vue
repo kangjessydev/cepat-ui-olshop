@@ -24,6 +24,7 @@ const currentImage = computed(() => {
       <img
         :src="currentImage"
         :alt="productName"
+        loading="lazy"
         class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
       />
       <div class="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/50 backdrop-blur-xs text-white text-[11px] font-medium flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -48,7 +49,7 @@ const currentImage = computed(() => {
         ]"
         @click="activeIndex = idx"
       >
-        <img :src="img" :alt="`${productName} - thumbnail ${idx + 1}`" class="w-full h-full object-cover" />
+        <img :src="img" :alt="`${productName} - thumbnail ${idx + 1}`" loading="lazy" class="w-full h-full object-cover" />
       </button>
     </div>
 

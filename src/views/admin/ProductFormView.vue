@@ -180,18 +180,18 @@
 import { ref, computed, onMounted } from 'vue'
 import { ArrowLeft, Save } from '@lucide/vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getMockProducts, saveMockProducts, getMockCategories } from '@/mock'
+import { productRepository } from '@/repositories'
 import { useToast } from '@/composables/useToast'
 import ProductImageUpload from '@/components/admin/ProductImageUpload.vue'
 import VariantBuilder from '@/components/admin/VariantBuilder.vue'
 import BaseSpinner from '@/components/base/BaseSpinner.vue'
-import type { Product, ProductVariantType, VariantMatrixItem } from '@/types'
+import type { ProductCategory, ProductVariantType, VariantMatrixItem } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const toast = useToast()
 
-const categories = getMockCategories()
+const categories = ref<ProductCategory[]>([])
 const isSubmitting = ref(false)
 const isEditMode = computed(() => !!route.params.id)
 
@@ -199,7 +199,7 @@ const form = ref({
   name: '',
   slug: '',
   sku: '',
-  categoryId: categories[0]?.id || '',
+  categoryId: '',
   weight: 500,
   description: '',
   images: [] as string[],
@@ -211,16 +211,20 @@ const form = ref({
   variantMatrix: [] as VariantMatrixItem[]
 })
 
-onMounted(() => {
+onMounted(async () => {
+  categories.value = await productRepository.getCategories()
+  if (!form.value.categoryId && categories.value.length > 0) {
+    form.value.categoryId = categories.value[0].id
+  }
+
   if (isEditMode.value) {
-    const products = getMockProducts()
-    const target = products.find(p => p.id === route.params.id)
+    const target = await productRepository.getById(route.params.id as string)
     if (target) {
       form.value = {
         name: target.name,
         slug: target.slug,
         sku: target.sku,
-        categoryId: target.category?.id || '',
+        categoryId: target.category?.id || categories.value[0]?.id || '',
         weight: target.weight,
         description: target.description,
         images: [...target.images],
@@ -261,37 +265,33 @@ async function saveProduct() {
   }
 
   isSubmitting.value = true
-  const products = getMockProducts()
-  const category = categories.find(c => c.id === form.value.categoryId) || categories[0]
+  const category = categories.value.find(c => c.id === form.value.categoryId) || categories.value[0]
 
-  if (isEditMode.value) {
-    const idx = products.findIndex(p => p.id === route.params.id)
-    if (idx > -1) {
-      products[idx] = {
-        ...products[idx],
+  try {
+    if (isEditMode.value) {
+      await productRepository.update(route.params.id as string, {
+        ...form.value,
+        category
+      })
+    } else {
+      await productRepository.create({
         ...form.value,
         category,
+        status: 'active',
+        rating: 5.0,
+        reviewCount: 0,
+        soldCount: 0,
+        createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      }
+      })
     }
-  } else {
-    const newProduct: Product = {
-      id: `prod-${Date.now()}`,
-      ...form.value,
-      category,
-      status: 'active',
-      rating: 5.0,
-      reviewCount: 0,
-      soldCount: 0,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }
-    products.unshift(newProduct)
-  }
 
-  saveMockProducts(products)
-  isSubmitting.value = false
-  toast.success(isEditMode.value ? 'Produk berhasil diperbarui' : 'Produk baru berhasil ditambahkan')
-  router.push('/admin/products')
+    toast.success(isEditMode.value ? 'Produk berhasil diperbarui' : 'Produk baru berhasil ditambahkan')
+    router.push('/admin/products')
+  } catch (err: any) {
+    toast.error(err?.message || 'Gagal menyimpan produk')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>

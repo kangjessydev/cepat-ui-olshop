@@ -61,6 +61,7 @@ Arsitektur Cepat UI Olshop menerapkan Adapter Pattern murni, sehingga logika UI 
 
 | Kategori | Lokasi | Pilihan Adapter Bawaan | Perintah Switch CLI |
 |---|---|---|---|
+| **Payment (Pembayaran)** | `src/adapters/payment/` | `manual` (Transfer BCA/Mandiri + COD), `xendit` (Invoice, QRIS, VA) | `npx cepat use:adapter payment xendit` |
 | **Shipping (Ekspedisi)** | `src/adapters/shipping/` | `manual` (Flat Rate), `rajaongkir` (RajaOngkir API) | `npx cepat use:adapter shipping rajaongkir` |
 | **Storage (Unggah Berkas)** | `src/adapters/storage/` | `local` (Base64), `indexed-db` (IndexedDB Offline), `cloudinary` | `npx cepat use:adapter storage cloudinary` |
 | **Notification (Real-Time)** | `src/adapters/notification/` | `polling` (Interval Poller), `websocket` (WebSocket Server) | `npx cepat use:adapter notification websocket` |
@@ -135,6 +136,7 @@ npx cepat make:store Supplier
 npx cepat make:mock-data Supplier
 
 # 5. Ganti adapter aktif secara instan
+npx cepat use:adapter payment xendit
 npx cepat use:adapter shipping rajaongkir
 npx cepat use:adapter storage cloudinary
 npx cepat use:adapter notification websocket
@@ -144,12 +146,121 @@ npx cepat use:adapter auth sanctum
 npx cepat seed:reset
 
 # 7. Periksa konfigurasi addon
+npx cepat addon:payment-xendit
 npx cepat addon:pwa
 npx cepat addon:analytics
 npx cepat addon:email
 npx cepat addon:pdf-export
 npx cepat addon:i18n
 ```
+
+---
+
+## 💳 Konfigurasi Payment Gateway & Custom Adapter
+
+Cepat UI Olshop menggunakan **Payment Adapter Pattern** (`src/adapters/payment/`) yang seragam dan mudah diperluas.
+
+### 1. Beralih ke Xendit Payment Gateway
+Cukup jalankan satu perintah CLI:
+```bash
+npx cepat use:adapter payment xendit
+```
+Lalu konfigurasikan key di file `.env`:
+```env
+VITE_XENDIT_PUBLIC_KEY=xnd_public_development_xxxxxx
+VITE_XENDIT_IS_SANDBOX=true
+```
+Halaman `/checkout` akan otomatis menampilkan opsi pembayaran modern (QRIS instan, BCA Virtual Account, Mandiri VA, dan Xendit Hosted Checkout), serta mengarahkan pembeli ke URL pembayaran invoice resmi.
+
+### 2. Cara Menambahkan Rekening / Metode Pembayaran Manual Baru
+Buka file [src/adapters/payment/manual.adapter.ts](file:///home/kangjessy/Documents/projects/cepat-ui-olshop/src/adapters/payment/manual.adapter.ts). Anda dapat menambahkan bank baru (misal: Bank BSI / BRI) ke dalam array `bankAccounts`:
+```typescript
+{
+  id: 'bsi',
+  bankName: 'BSI (Bank Syariah Indonesia)',
+  accountNumber: '7123456789',
+  accountName: 'PT CEPAT OLSHOP INDONESIA',
+  instructions: [
+    'Buka aplikasi BSI Mobile / ATM BSI',
+    'Pilih Transfer > Rekening BSI',
+    'Masukkan nomor rekening 7123456789 a.n. PT CEPAT OLSHOP INDONESIA',
+    'Simpan bukti transfer untuk diunggah di halaman pesanan'
+  ]
+}
+```
+
+### 3. Cara Menambahkan Gateway Pihak Ketiga Baru (Midtrans, Doku, Tripay)
+Buat file adapter baru di `src/adapters/payment/` dengan mengimplementasikan contract [PaymentAdapter](file:///home/kangjessy/Documents/projects/cepat-ui-olshop/src/adapters/payment/adapter.interface.ts):
+
+```typescript
+// src/adapters/payment/midtrans.adapter.ts
+import type { PaymentAdapter, CreatePaymentParams, PaymentTransactionResult } from './adapter.interface'
+import type { PaymentMethodOption } from '@/types/payment'
+
+export class MidtransPaymentAdapter implements PaymentAdapter {
+  readonly providerName = 'midtrans'
+
+  isConfigured(): boolean {
+    return !!import.meta.env.VITE_MIDTRANS_CLIENT_KEY
+  }
+
+  async getAvailableMethods(): Promise<PaymentMethodOption[]> {
+    return [
+      {
+        id: 'midtrans_snap',
+        type: 'ewallet',
+        name: 'Midtrans Snap Checkout',
+        description: 'Bayar via GoPay, ShopeePay, Virtual Account, atau Kartu Kredit',
+        isEnabled: true
+      }
+    ]
+  }
+
+  async createPayment(params: CreatePaymentParams): Promise<PaymentTransactionResult> {
+    // Panggil backend API Laravel atau Snap API untuk generate token
+    return {
+      success: true,
+      provider: 'midtrans',
+      reference: `SNAP-${params.orderNumber}`,
+      paymentUrl: `https://app.sandbox.midtrans.com/snap/v2/vtweb/${params.orderId}`,
+      status: 'pending'
+    }
+  }
+}
+```
+Lalu ekspor adapter tersebut di [src/adapters/payment/index.ts](file:///home/kangjessy/Documents/projects/cepat-ui-olshop/src/adapters/payment/index.ts):
+```typescript
+export const paymentAdapter: PaymentAdapter = new MidtransPaymentAdapter()
+```
+
+---
+
+## 🐘 Backend Laravel Reference (`examples/backend-laravel/`)
+
+Contoh controller dan routing Laravel siap pakai tersedia di folder [examples/backend-laravel/](file:///home/kangjessy/Documents/projects/cepat-ui-olshop/examples/backend-laravel/):
+- **`AuthController.php`**: Login, Register, Logout, Me (`/api/login`, `/api/register`, `/api/user`).
+- **`ProductController.php`**: CRUD produk, manajemen kategori, dan endpoint pengurangan stok otomatis (`/api/products/deduct-stock`).
+- **`OrderController.php`**: Pembuatan pesanan storefront, pelacakan pesanan publik, update resi kurir, dan riwayat pesanan pelanggan.
+- **`routes-api.php`**: Definisi route siap tempel di file `routes/api.php` proyek Laravel Anda.
+
+---
+
+## 🧪 Automated Testing & CI
+
+Proyek ini telah dilengkapi dengan unit test berbasis **Vitest** dan workflow **GitHub Actions**:
+
+```bash
+# Menjalankan pengujian otomatis (kalkulasi cart, diskon voucher, payment adapter)
+npm test
+
+# Menjalankan pemeriksaan ketat tipe data TypeScript
+npm run type-check
+
+# Menguji build produksi
+npm run build
+```
+
+Workflow CI otomatis pada [.github/workflows/ci.yml](file:///home/kangjessy/Documents/projects/cepat-ui-olshop/.github/workflows/ci.yml) memastikan setiap commit dan pull request diuji integritasnya (`type-check`, `test`, dan `build`).
 
 ---
 

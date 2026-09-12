@@ -109,7 +109,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   AlertTriangle,
   Clock,
@@ -122,30 +122,40 @@ import {
   TrendingUp
 } from '@lucide/vue'
 import { formatRupiah } from '@/utils/formatCurrency'
-import { getMockProducts, getMockOrders } from '@/mock'
+import { productRepository, orderRepository } from '@/repositories'
+import type { Product, Order } from '@/types'
 import RevenueChart from '@/components/admin/RevenueChart.vue'
 import RecentOrdersTable from '@/components/admin/RecentOrdersTable.vue'
 import LowStockWidget from '@/components/admin/LowStockWidget.vue'
 import TopProductsWidget from '@/components/admin/TopProductsWidget.vue'
 
-const products = getMockProducts()
-const orders = getMockOrders()
+const products = ref<Product[]>([])
+const orders = ref<Order[]>([])
+
+onMounted(async () => {
+  const [prods, ords] = await Promise.all([
+    productRepository.getAll(),
+    orderRepository.getAll()
+  ])
+  products.value = prods
+  orders.value = ords
+})
 
 const pendingOrdersCount = computed(() => {
-  return orders.filter(o => o.status === 'pending_payment').length
+  return orders.value.filter(o => o.status === 'pending_payment').length
 })
 
 const totalRevenue = computed(() => {
-  return orders
+  return orders.value
     .filter(o => o.status !== 'cancelled')
     .reduce((sum, o) => sum + o.totalAmount, 0)
 })
 
 const lowStockProducts = computed(() => {
-  return products.filter(p => p.stock <= 5)
+  return products.value.filter(p => p.stock <= 5)
 })
 
 const topProducts = computed(() => {
-  return [...products].sort((a, b) => b.soldCount - a.soldCount).slice(0, 4)
+  return [...products.value].sort((a, b) => b.soldCount - a.soldCount).slice(0, 4)
 })
 </script>

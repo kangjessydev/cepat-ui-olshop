@@ -30,6 +30,7 @@ function increment() {
     <img
       :src="item.productImage"
       :alt="item.productName"
+      loading="lazy"
       class="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover bg-gray-100 dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex-shrink-0"
     />
 

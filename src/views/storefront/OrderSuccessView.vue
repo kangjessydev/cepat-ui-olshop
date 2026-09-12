@@ -6,7 +6,7 @@ import { orderRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { useSeo } from '@/composables/useSeo'
 import { toast } from 'vue-sonner'
-import { CheckCircle2, Copy, Upload } from '@lucide/vue'
+import { CheckCircle2, Copy, Upload, ExternalLink } from '@lucide/vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -119,9 +119,85 @@ function handleUploadProof() {
       </div>
     </div>
 
-    <!-- Transfer Payment Instructions (if Bank Transfer) -->
+    <!-- Xendit Payment Gateway Card (if provider is Xendit) -->
     <div
-      v-if="order.payment.method === 'bank_transfer'"
+      v-if="order.payment.provider === 'xendit'"
+      class="bg-white dark:bg-gray-800 rounded-3xl border border-blue-100 dark:border-blue-900/40 p-6 sm:p-8 shadow-xs space-y-6"
+    >
+      <div class="border-b border-gray-100 dark:border-gray-700 pb-4 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">Pembayaran Online (Xendit)</h2>
+          <p class="text-xs text-gray-400 mt-0.5">Selesaikan pembayaran secara otomatis tanpa perlu kirim bukti transfer manual.</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+          Otomatis
+        </span>
+      </div>
+
+      <!-- Total Amount -->
+      <div class="p-4 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/60 rounded-2xl flex items-center justify-between">
+        <div>
+          <span class="text-[11px] text-gray-500 font-medium">Total Tagihan:</span>
+          <p class="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400">
+            {{ formatRupiah(order.totalAmount) }}
+          </p>
+        </div>
+        <button
+          type="button"
+          class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+          @click="copyText(String(order.totalAmount), 'Nominal tagihan')"
+        >
+          Salin Nominal
+        </button>
+      </div>
+
+      <!-- Virtual Account Details (if VA) -->
+      <div v-if="order.payment.accountNumber" class="p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl space-y-2 text-xs">
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Tipe Pembayaran:</span>
+          <span class="font-bold text-gray-900 dark:text-gray-100">{{ order.payment.bankName || 'Virtual Account' }}</span>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Nomor Rekening / VA:</span>
+          <div class="flex items-center gap-2">
+            <span class="font-mono font-bold text-gray-900 dark:text-gray-100 text-sm">
+              {{ order.payment.accountNumber }}
+            </span>
+            <button
+              type="button"
+              class="text-blue-600 hover:text-blue-700"
+              @click="copyText(order.payment.accountNumber!, 'Nomor rekening')"
+            >
+              <Copy :size="14" />
+            </button>
+          </div>
+        </div>
+        <div class="flex justify-between items-center">
+          <span class="text-gray-400">Atas Nama:</span>
+          <span class="font-semibold text-gray-900 dark:text-gray-100">{{ order.payment.accountName || 'CEPAT OLSHOP' }}</span>
+        </div>
+      </div>
+
+      <!-- External Checkout URL CTA -->
+      <div v-if="order.payment.paymentUrl" class="space-y-3">
+        <a
+          :href="order.payment.paymentUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md shadow-blue-500/20 transition-all"
+        >
+          <span>Bayar Sekarang di Portal Xendit</span>
+          <ExternalLink :size="16" />
+        </a>
+        <p class="text-[11px] text-center text-gray-400">
+          Mendukung QRIS, GoPay, OVO, Dana, ShopeePay, Virtual Account & Kartu Kredit.
+        </p>
+      </div>
+    </div>
+
+    <!-- Transfer Payment Instructions (if Manual Bank Transfer) -->
+    <div
+      v-else-if="order.payment.method === 'bank_transfer' || (!order.payment.provider || order.payment.provider === 'manual')"
       class="bg-white dark:bg-gray-800 rounded-3xl border border-gray-100 dark:border-gray-800 p-6 sm:p-8 shadow-xs space-y-6"
     >
       <div class="border-b border-gray-100 dark:border-gray-700 pb-4">

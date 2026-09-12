@@ -1,5 +1,6 @@
 import type {
   Product,
+  ProductCategory,
   Order,
   OrderStatus,
   Customer,
@@ -10,6 +11,7 @@ import type {
 export interface IProductRepository {
   getAll(): Promise<Product[]>
   getById(id: string): Promise<Product | null>
+  getCategories(): Promise<ProductCategory[]>
   create(product: Omit<Product, 'id'>): Promise<Product>
   update(id: string, updates: Partial<Product>): Promise<Product | null>
   delete(id: string): Promise<boolean>

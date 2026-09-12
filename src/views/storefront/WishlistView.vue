@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useWishlistStore } from '@/stores/wishlist.store'
 import type { Product } from '@/types'
-import { productsSeed } from '@/mock/products.seed'
+import { productRepository } from '@/repositories'
 import ProductCard from '@/components/storefront/ProductCard.vue'
 import EmptyState from '@/components/storefront/EmptyState.vue'
 import { useSeo } from '@/composables/useSeo'
@@ -15,17 +15,8 @@ useSeo({
 const wishlistStore = useWishlistStore()
 const allProducts = ref<Product[]>([])
 
-onMounted(() => {
-  const saved = localStorage.getItem('cepat_products')
-  if (saved) {
-    try {
-      allProducts.value = JSON.parse(saved)
-    } catch {
-      allProducts.value = [...productsSeed]
-    }
-  } else {
-    allProducts.value = [...productsSeed]
-  }
+onMounted(async () => {
+  allProducts.value = await productRepository.getAll()
 })
 
 const wishlistedProducts = computed(() => {
