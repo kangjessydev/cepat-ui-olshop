@@ -33,8 +33,8 @@ export interface AppConfig {
 }
 
 export const appConfig: AppConfig = {
-  name: 'Cepat UI',
-  description: 'Vue 3 Dashboard Starter Template',
+  name: 'Cepat UI Olshop',
+  description: 'Vue 3 E-Commerce & Online Shop Starter Kit',
 
   sidebar: {
     collapsible: true,
@@ -44,8 +44,8 @@ export const appConfig: AppConfig = {
   },
 
   auth: {
-    loginRoute: '/login',
-    defaultRedirect: '/dashboard',
+    loginRoute: '/admin/login',
+    defaultRedirect: '/admin',
     persistStrategy: 'localStorage',
   },
 

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Product } from '@/types'
-import { productsSeed } from '@/mock/products.seed'
+import { productRepository } from '@/repositories'
 import ProductCard from '@/components/storefront/ProductCard.vue'
 import EmptyState from '@/components/storefront/EmptyState.vue'
 import { useSeo } from '@/composables/useSeo'
@@ -28,22 +28,13 @@ const isMobileFilterOpen = ref(false)
 // Pagination load more
 const displayLimit = ref(8)
 
-onMounted(() => {
-  loadProducts()
+onMounted(async () => {
+  await loadProducts()
   syncFromUrl()
 })
 
-function loadProducts() {
-  const saved = localStorage.getItem('cepat_products')
-  if (saved) {
-    try {
-      products.value = JSON.parse(saved)
-    } catch {
-      products.value = [...productsSeed]
-    }
-  } else {
-    products.value = [...productsSeed]
-  }
+async function loadProducts() {
+  products.value = await productRepository.getAll()
 }
 
 function syncFromUrl() {

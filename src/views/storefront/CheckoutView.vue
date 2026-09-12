@@ -5,7 +5,7 @@ import { useCartStore } from '@/stores/cart.store'
 import { useCustomerAuthStore } from '@/stores/customerAuth.store'
 import { useStoreSettingsStore } from '@/stores/settings.store'
 import type { Order, CustomerAddress } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
+import { orderRepository, productRepository } from '@/repositories'
 import CheckoutStepper from '@/components/storefront/CheckoutStepper.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { useSeo } from '@/composables/useSeo'
@@ -81,7 +81,7 @@ const finalTotalAmount = computed(() => {
   return cartStore.grandTotal + shippingCost.value
 })
 
-function handlePlaceOrder() {
+async function handlePlaceOrder() {
   // Validation
   if (!shippingAddress.value.recipientName.trim()) {
     toast.error('Nama penerima wajib diisi')
@@ -146,20 +146,16 @@ function handlePlaceOrder() {
     updatedAt: now
   }
 
-  // Save to localStorage cepat_orders
-  const savedOrders = localStorage.getItem('cepat_orders')
-  let ordersList: Order[] = []
-  if (savedOrders) {
-    try {
-      ordersList = JSON.parse(savedOrders)
-    } catch {
-      ordersList = [...ordersSeed]
-    }
-  } else {
-    ordersList = [...ordersSeed]
-  }
-  ordersList.unshift(newOrder)
-  localStorage.setItem('cepat_orders', JSON.stringify(ordersList))
+  // Create order via Repository
+  await orderRepository.create(newOrder)
+
+  // Deduct stock via Repository
+  await productRepository.deductStock(
+    cartStore.items.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity
+    }))
+  )
 
   // Clear Cart
   cartStore.clearCart()

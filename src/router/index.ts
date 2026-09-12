@@ -16,6 +16,12 @@ const router = createRouter({
 
     // Auth routes
     {
+      path: '/admin/login',
+      name: 'admin-login',
+      component: () => import('@/pages/auth/login.vue'),
+      meta: { layout: 'auth', requiresAuth: false, title: 'Masuk Admin' }
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/pages/auth/login.vue'),
@@ -87,8 +93,9 @@ router.beforeEach(async (to) => {
   // Check auth requirement for protected routes
   const requiresAuth = to.meta.requiresAuth === true
   if (requiresAuth && !auth.isAuthenticated) {
+    const isUnderAdmin = to.path.startsWith('/admin')
     return {
-      path: '/login',
+      path: isUnderAdmin ? '/admin/login' : '/login',
       query: { redirect: to.fullPath }
     }
   }
@@ -106,8 +113,8 @@ router.beforeEach(async (to) => {
     }
   }
 
-  // Redirect authenticated user from login/register page to /admin
-  if ((to.path === '/login' || to.path === '/register') && auth.isAuthenticated) {
+  // Redirect authenticated user from admin login page to /admin
+  if (to.path === '/admin/login' && auth.isAuthenticated) {
     return { path: '/admin' }
   }
 })

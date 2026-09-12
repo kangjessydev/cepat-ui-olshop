@@ -4,16 +4,9 @@ import { customersSeed } from './customers.seed'
 import { vouchersSeed, flashSaleSeed } from './vouchers.seed'
 import { reviewsSeed } from './reviews.seed'
 import type { Product, Order, Customer, Voucher, FlashSaleEvent, ProductReview, ProductCategory } from '@/types'
+import { STORAGE_KEYS, setStorageItem, getStorageItem } from '@/constants/storage'
 
-export const STORAGE_KEYS = {
-  PRODUCTS: 'cepat_olshop_products',
-  CATEGORIES: 'cepat_olshop_categories',
-  ORDERS: 'cepat_olshop_orders',
-  CUSTOMERS: 'cepat_olshop_customers',
-  VOUCHERS: 'cepat_olshop_vouchers',
-  FLASH_SALE: 'cepat_olshop_flash_sale',
-  REVIEWS: 'cepat_olshop_reviews'
-}
+export { STORAGE_KEYS }
 
 /**
  * Inisialisasi mock data ke localStorage jika belum ada
@@ -21,26 +14,26 @@ export const STORAGE_KEYS = {
 export function initMockData(force = false): void {
   if (typeof window === 'undefined') return
 
-  if (force || !localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(productsSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.PRODUCTS, 'cepat_products')) {
+    setStorageItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(productsSeed), 'cepat_products')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.CATEGORIES)) {
-    localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categoriesSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.CATEGORIES, 'cepat_categories')) {
+    setStorageItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categoriesSeed), 'cepat_categories')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.ORDERS)) {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(ordersSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.ORDERS, 'cepat_orders')) {
+    setStorageItem(STORAGE_KEYS.ORDERS, JSON.stringify(ordersSeed), 'cepat_orders')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.CUSTOMERS)) {
-    localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customersSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.CUSTOMERS, 'cepat_customers')) {
+    setStorageItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(customersSeed), 'cepat_customers')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.VOUCHERS)) {
-    localStorage.setItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(vouchersSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.VOUCHERS, 'cepat_vouchers')) {
+    setStorageItem(STORAGE_KEYS.VOUCHERS, JSON.stringify(vouchersSeed), 'cepat_vouchers')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.FLASH_SALE)) {
-    localStorage.setItem(STORAGE_KEYS.FLASH_SALE, JSON.stringify(flashSaleSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.FLASH_SALE, 'cepat_flash_sale')) {
+    setStorageItem(STORAGE_KEYS.FLASH_SALE, JSON.stringify(flashSaleSeed), 'cepat_flash_sale')
   }
-  if (force || !localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviewsSeed))
+  if (force || !getStorageItem(STORAGE_KEYS.REVIEWS, 'cepat_reviews')) {
+    setStorageItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviewsSeed), 'cepat_reviews')
   }
 }
 
@@ -54,7 +47,7 @@ export function resetMockData(): void {
 // Helper Getters & Setters
 export function getMockProducts(): Product[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.PRODUCTS)
+    const raw = getStorageItem(STORAGE_KEYS.PRODUCTS, 'cepat_products')
     return raw ? JSON.parse(raw) : productsSeed
   } catch {
     return productsSeed
@@ -62,12 +55,12 @@ export function getMockProducts(): Product[] {
 }
 
 export function saveMockProducts(products: Product[]): void {
-  localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products))
+  setStorageItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products), 'cepat_products')
 }
 
 export function getMockCategories(): ProductCategory[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CATEGORIES)
+    const raw = getStorageItem(STORAGE_KEYS.CATEGORIES, 'cepat_categories')
     return raw ? JSON.parse(raw) : categoriesSeed
   } catch {
     return categoriesSeed
@@ -76,7 +69,7 @@ export function getMockCategories(): ProductCategory[] {
 
 export function getMockOrders(): Order[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.ORDERS)
+    const raw = getStorageItem(STORAGE_KEYS.ORDERS, 'cepat_orders')
     return raw ? JSON.parse(raw) : ordersSeed
   } catch {
     return ordersSeed
@@ -84,12 +77,12 @@ export function getMockOrders(): Order[] {
 }
 
 export function saveMockOrders(orders: Order[]): void {
-  localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders))
+  setStorageItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders), 'cepat_orders')
 }
 
 export function getMockCustomers(): Customer[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOMERS)
+    const raw = getStorageItem(STORAGE_KEYS.CUSTOMERS, 'cepat_customers')
     return raw ? JSON.parse(raw) : customersSeed
   } catch {
     return customersSeed
@@ -98,7 +91,7 @@ export function getMockCustomers(): Customer[] {
 
 export function getMockVouchers(): Voucher[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.VOUCHERS)
+    const raw = getStorageItem(STORAGE_KEYS.VOUCHERS, 'cepat_vouchers')
     return raw ? JSON.parse(raw) : vouchersSeed
   } catch {
     return vouchersSeed
@@ -107,7 +100,7 @@ export function getMockVouchers(): Voucher[] {
 
 export function getMockFlashSale(): FlashSaleEvent {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.FLASH_SALE)
+    const raw = getStorageItem(STORAGE_KEYS.FLASH_SALE, 'cepat_flash_sale')
     return raw ? JSON.parse(raw) : flashSaleSeed
   } catch {
     return flashSaleSeed
@@ -116,19 +109,9 @@ export function getMockFlashSale(): FlashSaleEvent {
 
 export function getMockReviews(): ProductReview[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.REVIEWS)
+    const raw = getStorageItem(STORAGE_KEYS.REVIEWS, 'cepat_reviews')
     return raw ? JSON.parse(raw) : reviewsSeed
   } catch {
     return reviewsSeed
   }
 }
-
-export function saveMockReviews(reviews: ProductReview[]): void {
-  localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews))
-}
-
-export * from './products.seed'
-export * from './orders.seed'
-export * from './customers.seed'
-export * from './vouchers.seed'
-export * from './reviews.seed'

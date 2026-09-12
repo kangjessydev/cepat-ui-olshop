@@ -2,9 +2,9 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Product, FlashSaleEvent, ProductReview } from '@/types'
-import { productsSeed } from '@/mock/products.seed'
+import { productRepository, reviewRepository } from '@/repositories'
 import { flashSaleSeed } from '@/mock/vouchers.seed'
-import { reviewsSeed } from '@/mock/reviews.seed'
+import { STORAGE_KEYS, getStorageItem } from '@/constants/storage'
 import { useStoreSettingsStore } from '@/stores/settings.store'
 import ProductCard from '@/components/storefront/ProductCard.vue'
 import FlashSaleCountdown from '@/components/storefront/FlashSaleCountdown.vue'
@@ -24,25 +24,16 @@ const products = ref<Product[]>([])
 const flashSale = ref<FlashSaleEvent | null>(null)
 const reviews = ref<ProductReview[]>([])
 
-onMounted(() => {
-  loadData()
+onMounted(async () => {
+  await loadData()
 })
 
-function loadData() {
+async function loadData() {
   // Products
-  const savedProds = localStorage.getItem('cepat_products')
-  if (savedProds) {
-    try {
-      products.value = JSON.parse(savedProds)
-    } catch {
-      products.value = [...productsSeed]
-    }
-  } else {
-    products.value = [...productsSeed]
-  }
+  products.value = await productRepository.getAll()
 
   // Flash Sale
-  const savedFs = localStorage.getItem('cepat_flash_sale')
+  const savedFs = getStorageItem(STORAGE_KEYS.FLASH_SALE, 'cepat_flash_sale')
   if (savedFs) {
     try {
       flashSale.value = JSON.parse(savedFs)
@@ -54,16 +45,8 @@ function loadData() {
   }
 
   // Reviews
-  const savedRev = localStorage.getItem('cepat_reviews')
-  if (savedRev) {
-    try {
-      reviews.value = JSON.parse(savedRev)
-    } catch {
-      reviews.value = [...reviewsSeed]
-    }
-  } else {
-    reviews.value = [...reviewsSeed]
-  }
+  const allRevs = await reviewRepository.getAll()
+  reviews.value = allRevs.filter(r => r.status === 'approved')
 }
 
 // Bestseller products (first 4)

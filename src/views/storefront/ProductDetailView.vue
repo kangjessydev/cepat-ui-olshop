@@ -2,8 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Product, VariantMatrixItem, ProductReview } from '@/types'
-import { productsSeed } from '@/mock/products.seed'
-import { reviewsSeed } from '@/mock/reviews.seed'
+import { productRepository, reviewRepository } from '@/repositories'
 import { useCartStore } from '@/stores/cart.store'
 import { useStoreSettingsStore } from '@/stores/settings.store'
 import ProductGallery from '@/components/storefront/ProductGallery.vue'
@@ -36,28 +35,18 @@ useSeo(() => ({
   image: product.value?.images?.[0]
 }))
 
-onMounted(() => {
-  loadProduct()
+onMounted(async () => {
+  await loadProduct()
 })
 
-watch(() => route.params.id, () => {
-  loadProduct()
+watch(() => route.params.id, async () => {
+  await loadProduct()
   window.scrollTo({ top: 0, behavior: 'smooth' })
 })
 
-function loadProduct() {
+async function loadProduct() {
   const id = route.params.id as string
-  const savedProds = localStorage.getItem('cepat_products')
-  let prods: Product[] = []
-  if (savedProds) {
-    try {
-      prods = JSON.parse(savedProds)
-    } catch {
-      prods = [...productsSeed]
-    }
-  } else {
-    prods = [...productsSeed]
-  }
+  const prods = await productRepository.getAll()
 
   const found = prods.find(p => p.id === id || p.slug === id)
   if (!found) {
@@ -77,22 +66,11 @@ function loadProduct() {
     .slice(0, 4)
 
   // Reviews
-  const savedReviews = localStorage.getItem('cepat_reviews')
-  let revs: ProductReview[] = []
-  if (savedReviews) {
-    try {
-      revs = JSON.parse(savedReviews)
-    } catch {
-      revs = [...reviewsSeed]
-    }
-  } else {
-    revs = [...reviewsSeed]
-  }
-
-  productReviews.value = revs.filter(r => r.productId === found.id && r.status === 'approved')
+  const allRevs = await reviewRepository.getAll()
+  productReviews.value = allRevs.filter(r => r.productId === found.id && r.status === 'approved')
   // If no specific reviews for this product, show general reviews
   if (productReviews.value.length === 0) {
-    productReviews.value = revs.filter(r => r.status === 'approved').slice(0, 2)
+    productReviews.value = allRevs.filter(r => r.status === 'approved').slice(0, 2)
   }
 }
 

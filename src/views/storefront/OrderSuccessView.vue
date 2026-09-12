@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Order } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
+import { orderRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { useSeo } from '@/composables/useSeo'
 import { toast } from 'vue-sonner'
@@ -13,31 +13,20 @@ const router = useRouter()
 
 useSeo({
   title: 'Pesanan Berhasil Dibuat',
-  description: 'Terima kasih telah berbelanja di Cepat Olshop. Silakan selesaikan pembayaran pesanan Anda.'
+  description: 'Terima kasih atas pesanan Anda. Segera selesaikan pembayaran untuk diproses.'
 })
 
 const order = ref<Order | null>(null)
 const proofUrlInput = ref('')
 const isUploadingProof = ref(false)
 
-onMounted(() => {
-  loadOrder()
+onMounted(async () => {
+  await loadOrder()
 })
 
-function loadOrder() {
+async function loadOrder() {
   const id = route.params.id as string
-  const saved = localStorage.getItem('cepat_orders')
-  let orders: Order[] = []
-  if (saved) {
-    try {
-      orders = JSON.parse(saved)
-    } catch {
-      orders = [...ordersSeed]
-    }
-  } else {
-    orders = [...ordersSeed]
-  }
-
+  const orders = await orderRepository.getAll()
   const found = orders.find(o => o.id === id || o.orderNumber === id)
   if (found) {
     order.value = found
@@ -82,11 +71,12 @@ function handleUploadProof() {
   }
 
   // Update in localStorage
-  const saved = localStorage.getItem('cepat_orders')
+  const saved = localStorage.getItem('cepat_olshop_orders') || localStorage.getItem('cepat_orders')
   let orders: Order[] = []
   if (saved) orders = JSON.parse(saved)
   const idx = orders.findIndex(o => o.id === updated.id)
   if (idx !== -1) orders[idx] = updated
+  localStorage.setItem('cepat_olshop_orders', JSON.stringify(orders))
   localStorage.setItem('cepat_orders', JSON.stringify(orders))
 
   order.value = updated

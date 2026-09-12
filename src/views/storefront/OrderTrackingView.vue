@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import type { Order } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
+import { orderRepository } from '@/repositories'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge.vue'
 import OrderTimeline from '@/components/admin/OrderTimeline.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
@@ -28,7 +28,7 @@ onMounted(() => {
   }
 })
 
-function handleSearch() {
+async function handleSearch() {
   const q = queryInput.value.trim().toLowerCase()
   if (!q) {
     toast.error('Ketikkan nomor pesanan atau nomor WhatsApp terlebih dahulu')
@@ -37,24 +37,13 @@ function handleSearch() {
 
   hasSearched.value = true
 
-  const saved = localStorage.getItem('cepat_orders')
-  let orders: Order[] = []
-  if (saved) {
-    try {
-      orders = JSON.parse(saved)
-    } catch {
-      orders = [...ordersSeed]
-    }
-  } else {
-    orders = [...ordersSeed]
-  }
-
   const cleanQ = q.replace(/^#/, '')
+  const orders = await orderRepository.getAll()
   const found = orders.find(
     o =>
       o.orderNumber.toLowerCase() === cleanQ ||
       o.id.toLowerCase() === cleanQ ||
-      o.customerPhone.includes(cleanQ) ||
+      (o.customerPhone && o.customerPhone.includes(cleanQ)) ||
       (o.shipping.trackingNumber && o.shipping.trackingNumber.toLowerCase() === cleanQ)
   )
 

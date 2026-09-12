@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Customer } from '@/types'
-import { customersSeed } from '@/mock/customers.seed'
+import { customerRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { exportToCsv } from '@/utils/exportCsv'
 import { toast } from 'vue-sonner'
@@ -12,22 +12,12 @@ const customers = ref<Customer[]>([])
 const searchQuery = ref('')
 const sortBy = ref<'spent_desc' | 'orders_desc' | 'newest'>('spent_desc')
 
-onMounted(() => {
-  loadCustomers()
+onMounted(async () => {
+  await loadCustomers()
 })
 
-function loadCustomers() {
-  const saved = localStorage.getItem('cepat_customers')
-  if (saved) {
-    try {
-      customers.value = JSON.parse(saved)
-    } catch {
-      customers.value = [...customersSeed]
-    }
-  } else {
-    customers.value = [...customersSeed]
-    localStorage.setItem('cepat_customers', JSON.stringify(customersSeed))
-  }
+async function loadCustomers() {
+  customers.value = await customerRepository.getAll()
 }
 
 const stats = computed(() => {

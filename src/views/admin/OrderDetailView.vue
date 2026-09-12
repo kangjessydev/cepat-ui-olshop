@@ -2,12 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Order } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge.vue'
 import OrderTimeline from '@/components/admin/OrderTimeline.vue'
 import InvoicePrintModal from '@/components/admin/InvoicePrintModal.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { toast } from 'vue-sonner'
+
+import { orderRepository } from '@/repositories'
 
 const route = useRoute()
 const router = useRouter()
@@ -18,30 +19,19 @@ const isPrintModalOpen = ref(false)
 const isTrackingModalOpen = ref(false)
 const isProofModalOpen = ref(false)
 
-// Input resi form state
+// Resi Modal Form
 const trackingCourier = ref('')
 const trackingService = ref('')
 const trackingNumberInput = ref('')
 
-onMounted(() => {
-  loadOrderDetail()
+onMounted(async () => {
+  await loadOrderDetail()
 })
 
-function loadOrderDetail() {
+async function loadOrderDetail() {
   const orderId = route.params.id as string
-  const saved = localStorage.getItem('cepat_orders')
-  let orders: Order[] = []
-  if (saved) {
-    try {
-      orders = JSON.parse(saved)
-    } catch {
-      orders = [...ordersSeed]
-    }
-  } else {
-    orders = [...ordersSeed]
-  }
-
-  const found = orders.find(o => o.id === orderId || o.orderNumber === orderId)
+  const all = await orderRepository.getAll()
+  const found = all.find(o => o.id === orderId || o.orderNumber === orderId)
   if (found) {
     order.value = found
     internalNoteInput.value = found.internalNotes || ''
@@ -55,13 +45,13 @@ function loadOrderDetail() {
 }
 
 function saveOrderToStorage(updatedOrder: Order) {
-  const saved = localStorage.getItem('cepat_orders')
+  const saved = localStorage.getItem('cepat_olshop_orders') || localStorage.getItem('cepat_orders')
   let orders: Order[] = []
   if (saved) {
     try {
       orders = JSON.parse(saved)
     } catch {
-      orders = [...ordersSeed]
+      orders = []
     }
   }
   const idx = orders.findIndex(o => o.id === updatedOrder.id)
@@ -70,6 +60,7 @@ function saveOrderToStorage(updatedOrder: Order) {
   } else {
     orders.unshift(updatedOrder)
   }
+  localStorage.setItem('cepat_olshop_orders', JSON.stringify(orders))
   localStorage.setItem('cepat_orders', JSON.stringify(orders))
   order.value = { ...updatedOrder }
 }

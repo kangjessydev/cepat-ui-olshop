@@ -1,48 +1,39 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import type { Voucher, DiscountType } from '@/types'
-import { vouchersSeed } from '@/mock/vouchers.seed'
+import type { Voucher } from '@/types'
+import { voucherRepository } from '@/repositories'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { toast } from 'vue-sonner'
 
 const vouchers = ref<Voucher[]>([])
+
+// Modal Form State
 const isModalOpen = ref(false)
 const editingVoucherId = ref<string | null>(null)
-
-// Form fields
 const form = ref({
   code: '',
   title: '',
   description: '',
-  discountType: 'fixed' as DiscountType,
-  discountValue: 10000,
+  discountType: 'fixed' as 'fixed' | 'percentage',
+  discountValue: 0,
+  minOrderAmount: 0,
   maxDiscount: 0,
-  minOrderAmount: 50000,
   usageLimit: 100,
   startDate: '',
   endDate: '',
   isActive: true
 })
 
-onMounted(() => {
-  loadVouchers()
+onMounted(async () => {
+  await loadVouchers()
 })
 
-function loadVouchers() {
-  const saved = localStorage.getItem('cepat_vouchers')
-  if (saved) {
-    try {
-      vouchers.value = JSON.parse(saved)
-    } catch {
-      vouchers.value = [...vouchersSeed]
-    }
-  } else {
-    vouchers.value = [...vouchersSeed]
-    localStorage.setItem('cepat_vouchers', JSON.stringify(vouchersSeed))
-  }
+async function loadVouchers() {
+  vouchers.value = await voucherRepository.getAll()
 }
 
 function saveToStorage() {
+  localStorage.setItem('cepat_olshop_vouchers', JSON.stringify(vouchers.value))
   localStorage.setItem('cepat_vouchers', JSON.stringify(vouchers.value))
 }
 

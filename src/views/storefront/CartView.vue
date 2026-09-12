@@ -2,8 +2,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart.store'
-import type { Voucher } from '@/types'
-import { vouchersSeed } from '@/mock/vouchers.seed'
+import { voucherRepository } from '@/repositories'
 import CartItemRow from '@/components/storefront/CartItemRow.vue'
 import EmptyState from '@/components/storefront/EmptyState.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
@@ -30,28 +29,15 @@ function handleRemoveItem(id: string) {
   toast.info('Item dihapus dari keranjang')
 }
 
-function handleApplyVoucher() {
+async function handleApplyVoucher() {
   const code = voucherCodeInput.value.trim().toUpperCase()
   if (!code) {
     toast.error('Masukkan kode voucher terlebih dahulu')
     return
   }
 
-  // Load vouchers
-  const savedVouchers = localStorage.getItem('cepat_vouchers')
-  let vouchers: Voucher[] = []
-  if (savedVouchers) {
-    try {
-      vouchers = JSON.parse(savedVouchers)
-    } catch {
-      vouchers = [...vouchersSeed]
-    }
-  } else {
-    vouchers = [...vouchersSeed]
-  }
-
-  const found = vouchers.find(v => v.code.toUpperCase() === code && v.isActive)
-  if (!found) {
+  const found = await voucherRepository.getByCode(code)
+  if (!found || !found.isActive) {
     toast.error('Kode voucher tidak valid atau sudah kedaluwarsa')
     return
   }

@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import type { Order } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
+import { orderRepository } from '@/repositories'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge.vue'
 import InvoicePrintModal from '@/components/admin/InvoicePrintModal.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
@@ -19,22 +19,12 @@ const selectedCourier = ref<string>('all')
 const activePrintOrder = ref<Order | null>(null)
 const isPrintModalOpen = ref(false)
 
-onMounted(() => {
-  loadOrders()
+onMounted(async () => {
+  await loadOrders()
 })
 
-function loadOrders() {
-  const saved = localStorage.getItem('cepat_orders')
-  if (saved) {
-    try {
-      orders.value = JSON.parse(saved)
-    } catch {
-      orders.value = [...ordersSeed]
-    }
-  } else {
-    orders.value = [...ordersSeed]
-    localStorage.setItem('cepat_orders', JSON.stringify(ordersSeed))
-  }
+async function loadOrders() {
+  orders.value = await orderRepository.getAll()
 }
 
 // Counts for tabs

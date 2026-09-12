@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCustomerAuthStore } from '@/stores/customerAuth.store'
 import type { Order, CustomerAddress } from '@/types'
-import { ordersSeed } from '@/mock/orders.seed'
+import { orderRepository } from '@/repositories'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { useSeo } from '@/composables/useSeo'
@@ -34,32 +34,21 @@ const newAddress = ref<CustomerAddress>({
   notes: ''
 })
 
-onMounted(() => {
+onMounted(async () => {
   if (!authStore.isAuthenticated || !authStore.customer) {
     router.push('/login')
     return
   }
-  loadCustomerOrders()
+  await loadCustomerOrders()
 })
 
-function loadCustomerOrders() {
-  const saved = localStorage.getItem('cepat_orders')
-  let allOrders: Order[] = []
-  if (saved) {
-    try {
-      allOrders = JSON.parse(saved)
-    } catch {
-      allOrders = [...ordersSeed]
-    }
-  } else {
-    allOrders = [...ordersSeed]
-  }
-
+async function loadCustomerOrders() {
+  const allOrders = await orderRepository.getAll()
   const custId = authStore.customer?.id
   const custEmail = authStore.customer?.email?.toLowerCase()
 
   myOrders.value = allOrders.filter(
-    o => o.customerId === custId || o.customerEmail.toLowerCase() === custEmail
+    o => o.customerId === custId || (o.customerEmail && o.customerEmail.toLowerCase() === custEmail)
   )
 }
 

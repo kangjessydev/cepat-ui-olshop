@@ -2,8 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { Customer, Order } from '@/types'
-import { customersSeed } from '@/mock/customers.seed'
-import { ordersSeed } from '@/mock/orders.seed'
+import { customerRepository, orderRepository } from '@/repositories'
 import OrderStatusBadge from '@/components/admin/OrderStatusBadge.vue'
 import { formatRupiah } from '@/utils/formatCurrency'
 import { toast } from 'vue-sonner'
@@ -14,27 +13,14 @@ const router = useRouter()
 const customer = ref<Customer | null>(null)
 const customerOrders = ref<Order[]>([])
 
-onMounted(() => {
-  loadCustomerData()
+onMounted(async () => {
+  await loadCustomerData()
 })
 
-function loadCustomerData() {
+async function loadCustomerData() {
   const customerId = route.params.id as string
 
-  // Load Customers
-  const savedCust = localStorage.getItem('cepat_customers')
-  let customers: Customer[] = []
-  if (savedCust) {
-    try {
-      customers = JSON.parse(savedCust)
-    } catch {
-      customers = [...customersSeed]
-    }
-  } else {
-    customers = [...customersSeed]
-  }
-
-  const found = customers.find(c => c.id === customerId)
+  const found = await customerRepository.getById(customerId)
   if (!found) {
     toast.error('Pelanggan tidak ditemukan')
     router.push('/admin/customers')
@@ -42,21 +28,9 @@ function loadCustomerData() {
   }
   customer.value = found
 
-  // Load Customer Orders
-  const savedOrders = localStorage.getItem('cepat_orders')
-  let allOrders: Order[] = []
-  if (savedOrders) {
-    try {
-      allOrders = JSON.parse(savedOrders)
-    } catch {
-      allOrders = [...ordersSeed]
-    }
-  } else {
-    allOrders = [...ordersSeed]
-  }
-
+  const allOrders = await orderRepository.getAll()
   customerOrders.value = allOrders.filter(
-    o => o.customerId === customerId || o.customerEmail.toLowerCase() === found.email.toLowerCase()
+    o => o.customerId === customerId || (o.customerEmail && o.customerEmail.toLowerCase() === found.email.toLowerCase())
   )
 }
 

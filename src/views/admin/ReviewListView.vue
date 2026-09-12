@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import type { ProductReview } from '@/types'
-import { reviewsSeed } from '@/mock/reviews.seed'
+import { reviewRepository } from '@/repositories'
 import { toast } from 'vue-sonner'
 
 const reviews = ref<ProductReview[]>([])
@@ -14,25 +14,16 @@ const isReplyModalOpen = ref(false)
 const activeReview = ref<ProductReview | null>(null)
 const replyText = ref('')
 
-onMounted(() => {
-  loadReviews()
+onMounted(async () => {
+  await loadReviews()
 })
 
-function loadReviews() {
-  const saved = localStorage.getItem('cepat_reviews')
-  if (saved) {
-    try {
-      reviews.value = JSON.parse(saved)
-    } catch {
-      reviews.value = [...reviewsSeed]
-    }
-  } else {
-    reviews.value = [...reviewsSeed]
-    localStorage.setItem('cepat_reviews', JSON.stringify(reviewsSeed))
-  }
+async function loadReviews() {
+  reviews.value = await reviewRepository.getAll()
 }
 
 function saveReviews() {
+  localStorage.setItem('cepat_olshop_reviews', JSON.stringify(reviews.value))
   localStorage.setItem('cepat_reviews', JSON.stringify(reviews.value))
 }
 
