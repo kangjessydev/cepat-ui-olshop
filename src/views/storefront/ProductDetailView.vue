@@ -355,6 +355,7 @@ function handleBuyNow() {
               <img
                 :src="r.customerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customerName)}&background=10b981&color=fff`"
                 :alt="r.customerName"
+                loading="lazy"
                 class="w-8 h-8 rounded-full object-cover"
               />
               <div>

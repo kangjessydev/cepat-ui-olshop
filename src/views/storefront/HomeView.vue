@@ -197,7 +197,7 @@ function navigateCategory(catName: string) {
             @click="router.push(`/products/${item.productId}`)"
           >
             <div class="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-900 mb-2.5">
-              <img :src="item.productImage" :alt="item.productName" class="w-full h-full object-cover" />
+              <img :src="item.productImage" :alt="item.productName" loading="lazy" class="w-full h-full object-cover" />
               <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-rose-600 text-white font-black text-[10px]">
                 -{{ item.discountPercent }}%
               </span>
@@ -331,6 +331,7 @@ function navigateCategory(catName: string) {
             <img
               :src="rev.customerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(rev.customerName)}&background=10b981&color=fff`"
               :alt="rev.customerName"
+              loading="lazy"
               class="w-8 h-8 rounded-full object-cover"
             />
             <div>

@@ -85,5 +85,15 @@ describe('Payment Adapters', () => {
       expect(result.accountNumber?.length).toBeGreaterThanOrEqual(10)
       expect(result.bankName).toContain('Virtual Account')
     })
+
+    it('returns pending on initial verify and settled when simulated', async () => {
+      const ref = 'xendit_test_ref_123'
+      const initial = await adapter.verifyPayment(ref)
+      expect(initial.status).toBe('pending')
+
+      adapter.simulateSettlement(ref)
+      const afterSimulate = await adapter.verifyPayment(ref)
+      expect(afterSimulate.status).toBe('settled')
+    })
   })
 })

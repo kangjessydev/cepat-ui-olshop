@@ -261,6 +261,7 @@ function handleExportCsv() {
                   <img
                     :src="order.items[0]?.productImage || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=100'"
                     :alt="order.items[0]?.productName"
+                    loading="lazy"
                     class="w-10 h-10 rounded-lg object-cover bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-800 flex-shrink-0"
                   />
                   <div class="truncate">

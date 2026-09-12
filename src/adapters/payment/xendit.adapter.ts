@@ -5,6 +5,7 @@ export class XenditPaymentAdapter implements PaymentAdapter {
   readonly providerName = 'xendit'
   private publicKey: string
   private isSandbox: boolean
+  private simulatedSettlements = new Set<string>()
 
   constructor() {
     this.publicKey = import.meta.env.VITE_XENDIT_PUBLIC_KEY || ''
@@ -149,9 +150,39 @@ export class XenditPaymentAdapter implements PaymentAdapter {
   }
 
   async verifyPayment(reference: string): Promise<{ status: 'pending' | 'settled' | 'expired' | 'failed'; message?: string }> {
+    let isSettled = this.simulatedSettlements.has(reference)
+
+    if (!isSettled) {
+      try {
+        if (typeof localStorage !== 'undefined' && localStorage.getItem) {
+          isSettled = localStorage.getItem(`xendit_simulated_${reference}`) === 'settled'
+        }
+      } catch {
+        // Fallback gracefully if storage is restricted
+      }
+    }
+
+    if (isSettled) {
+      return {
+        status: 'settled',
+        message: `Transaksi Xendit (${reference}) berhasil diverifikasi dan berstatus lunas`
+      }
+    }
+
     return {
       status: 'pending',
       message: `Status transaksi Xendit (${reference}) sedang menunggu penyelesaian oleh pelanggan`
+    }
+  }
+
+  simulateSettlement(reference: string): void {
+    this.simulatedSettlements.add(reference)
+    try {
+      if (typeof localStorage !== 'undefined' && localStorage.setItem) {
+        localStorage.setItem(`xendit_simulated_${reference}`, 'settled')
+      }
+    } catch {
+      // Fallback gracefully
     }
   }
 }
