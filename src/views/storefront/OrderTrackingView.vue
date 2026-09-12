@@ -150,7 +150,7 @@ async function handleSearch() {
             </h3>
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
               <div v-for="item in order.items" :key="item.id" class="py-2.5 flex items-center gap-2.5 first:pt-0">
-                <img :src="item.productImage" :alt="item.productName" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+                <img :src="item.productImage" :alt="item.productName" loading="lazy" class="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                 <div class="flex-1 min-w-0">
                   <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ item.productName }}</p>
                   <p class="text-[10px] text-gray-400">x{{ item.quantity }} unit</p>

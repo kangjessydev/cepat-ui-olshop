@@ -294,6 +294,7 @@ function handlePrint() {
                   <img
                     :src="p.image"
                     :alt="p.name"
+                    loading="lazy"
                     class="w-10 h-10 rounded-xl object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
                   />
                   <span class="font-medium text-gray-900 dark:text-gray-100 text-xs sm:text-sm">{{ p.name }}</span>

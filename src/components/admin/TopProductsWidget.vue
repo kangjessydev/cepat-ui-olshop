@@ -18,6 +18,7 @@
           <img
             :src="product.images[0]"
             :alt="product.name"
+            loading="lazy"
             class="w-12 h-12 rounded-xl object-cover border border-slate-100 dark:border-slate-800"
           />
           <span

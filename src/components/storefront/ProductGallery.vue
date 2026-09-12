@@ -60,7 +60,7 @@ const currentImage = computed(() => {
       @click="isZoomModalOpen = false"
     >
       <div class="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl">
-        <img :src="currentImage" :alt="productName" class="max-h-[85vh] w-auto object-contain mx-auto rounded-xl" />
+        <img :src="currentImage" :alt="productName" loading="lazy" class="max-h-[85vh] w-auto object-contain mx-auto rounded-xl" />
         <button
           type="button"
           class="absolute top-4 right-4 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors"

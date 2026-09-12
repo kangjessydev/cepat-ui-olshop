@@ -50,15 +50,26 @@ export default defineConfig({
   },
 
   build: {
-    chunkSizeWarningLimit: 1000,
+    chunkSizeWarningLimit: 850,
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes('node_modules')) {
-            if (id.includes('vue') || id.includes('pinia') || id.includes('@vueuse') || id.includes('unhead')) {
+            if (id.includes('/node_modules/@lucide/')) {
+              return 'lucide-vendor'
+            }
+            if (
+              id.includes('/node_modules/vue/') ||
+              id.includes('/node_modules/vue-router/') ||
+              id.includes('/node_modules/@vue/') ||
+              id.includes('/node_modules/pinia/') ||
+              id.includes('/node_modules/@vueuse/') ||
+              id.includes('/node_modules/unhead/') ||
+              id.includes('/node_modules/@unhead/')
+            ) {
               return 'vue-vendor'
             }
-            if (id.includes('axios')) {
+            if (id.includes('/node_modules/axios/')) {
               return 'axios-vendor'
             }
           }

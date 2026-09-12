@@ -24,6 +24,7 @@
           <img
             :src="product.images[0]"
             :alt="product.name"
+            loading="lazy"
             class="w-10 h-10 rounded-lg object-cover border border-rose-200/60 dark:border-rose-900/40 shrink-0"
           />
           <div class="min-w-0">

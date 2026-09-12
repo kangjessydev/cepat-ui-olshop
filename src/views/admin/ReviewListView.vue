@@ -190,6 +190,7 @@ function formatDate(dateStr: string): string {
             <img
               :src="r.customerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.customerName)}&background=10b981&color=fff`"
               :alt="r.customerName"
+              loading="lazy"
               class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
             />
             <div>

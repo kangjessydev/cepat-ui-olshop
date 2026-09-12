@@ -83,6 +83,53 @@ function handleUploadProof() {
   isUploadingProof.value = false
   toast.success('Bukti pembayaran berhasil diunggah dan sedang diverifikasi oleh admin toko!')
 }
+
+const isSimulatingPayment = ref(false)
+
+async function handleSimulatePaymentSuccess() {
+  if (!order.value) return
+  isSimulatingPayment.value = true
+
+  // Mark reference settled in Xendit simulation adapter
+  if (order.value.payment.reference) {
+    localStorage.setItem(`xendit_simulated_${order.value.payment.reference}`, 'settled')
+  }
+
+  const updated: Order = {
+    ...order.value,
+    status: 'processing',
+    payment: {
+      ...order.value.payment,
+      status: 'paid',
+      paidAt: new Date().toISOString()
+    },
+    timeline: [
+      {
+        id: `tl-${Date.now()}`,
+        title: 'Pembayaran Dikonfirmasi Otomatis',
+        description: 'Pembayaran telah sukses diverifikasi (Simulasi Sandbox Xendit/Gateway)',
+        timestamp: new Date().toISOString(),
+        status: 'processing',
+        actor: 'system'
+      },
+      ...(order.value.timeline || [])
+    ]
+  }
+
+  // Update in localStorage
+  const saved = localStorage.getItem('cepat_olshop_orders') || localStorage.getItem('cepat_orders')
+  let orders: Order[] = []
+  if (saved) orders = JSON.parse(saved)
+  const idx = orders.findIndex(o => o.id === updated.id)
+  if (idx !== -1) orders[idx] = updated
+  else orders.unshift(updated)
+  localStorage.setItem('cepat_olshop_orders', JSON.stringify(orders))
+  localStorage.setItem('cepat_orders', JSON.stringify(orders))
+
+  order.value = updated
+  isSimulatingPayment.value = false
+  toast.success(`Pembayaran simulasi berhasil! Pesanan #${updated.orderNumber} kini otomatis diproses.`)
+}
 </script>
 
 <template>
@@ -119,6 +166,23 @@ function handleUploadProof() {
       </div>
     </div>
 
+    <!-- Paid / Settled Success Alert Banner (when payment verified) -->
+    <div
+      v-if="order.payment.status === 'paid'"
+      class="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 rounded-3xl p-6 sm:p-8 text-center space-y-3 shadow-xs"
+    >
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300 text-xs font-bold">
+        <CheckCircle2 :size="15" />
+        <span>Pembayaran Lunas & Terverifikasi</span>
+      </div>
+      <h3 class="text-lg sm:text-xl font-black text-emerald-900 dark:text-emerald-100">
+        Pesanan Anda Sedang Dipersiapkan oleh Penjual
+      </h3>
+      <p class="text-xs text-emerald-700 dark:text-emerald-300 max-w-md mx-auto">
+        Pembayaran sebesar <span class="font-bold">{{ formatRupiah(order.totalAmount) }}</span> telah berhasil diterima. Tim gudang segera mengemas produk Anda.
+      </p>
+    </div>
+
     <!-- Xendit Payment Gateway Card (if provider is Xendit) -->
     <div
       v-if="order.payment.provider === 'xendit'"
@@ -129,8 +193,11 @@ function handleUploadProof() {
           <h2 class="text-base font-bold text-gray-900 dark:text-gray-100">Pembayaran Online (Xendit)</h2>
           <p class="text-xs text-gray-400 mt-0.5">Selesaikan pembayaran secara otomatis tanpa perlu kirim bukti transfer manual.</p>
         </div>
-        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
-          Otomatis
+        <span
+          class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase"
+          :class="order.payment.status === 'paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300' : 'bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400'"
+        >
+          {{ order.payment.status === 'paid' ? 'LUNAS' : 'OTOMATIS' }}
         </span>
       </div>
 
@@ -144,7 +211,7 @@ function handleUploadProof() {
         </div>
         <button
           type="button"
-          class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition"
+          class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition cursor-pointer"
           @click="copyText(String(order.totalAmount), 'Nominal tagihan')"
         >
           Salin Nominal
@@ -179,7 +246,7 @@ function handleUploadProof() {
       </div>
 
       <!-- External Checkout URL CTA -->
-      <div v-if="order.payment.paymentUrl" class="space-y-3">
+      <div v-if="order.payment.paymentUrl && order.payment.status !== 'paid'" class="space-y-3">
         <a
           :href="order.payment.paymentUrl"
           target="_blank"
@@ -192,6 +259,32 @@ function handleUploadProof() {
         <p class="text-[11px] text-center text-gray-400">
           Mendukung QRIS, GoPay, OVO, Dana, ShopeePay, Virtual Account & Kartu Kredit.
         </p>
+      </div>
+
+      <!-- Demo Sandbox Instant Settlement Simulator -->
+      <div
+        v-if="order.payment.status !== 'paid'"
+        class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2.5"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">🧪</span>
+            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Mode Demo Sandbox (Xendit Test)</span>
+          </div>
+          <span class="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Starter Kit Simulation</span>
+        </div>
+        <p class="text-[11px] text-amber-800 dark:text-amber-300">
+          Uji coba alur happy-path (pembayaran auto-confirmed &rarr; pesanan langsung diproses) tanpa perlu backend / webhook aktif.
+        </p>
+        <button
+          type="button"
+          class="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+          :disabled="isSimulatingPayment"
+          @click="handleSimulatePaymentSuccess"
+        >
+          <span v-if="isSimulatingPayment">Memproses Konfirmasi...</span>
+          <span v-else>⚡ Simulasikan Pembayaran Sukses (Auto-Confirm)</span>
+        </button>
       </div>
     </div>
 
@@ -278,6 +371,32 @@ function handleUploadProof() {
             Unggah
           </button>
         </div>
+      </div>
+
+      <!-- Demo Sandbox Instant Approval Simulator (Manual Transfer) -->
+      <div
+        v-if="order.payment.status !== 'paid'"
+        class="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/60 space-y-2.5"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5">
+            <span class="text-sm">🧪</span>
+            <span class="text-xs font-bold text-amber-900 dark:text-amber-200">Mode Demo Sandbox (Admin Approval Test)</span>
+          </div>
+          <span class="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Starter Kit Simulation</span>
+        </div>
+        <p class="text-[11px] text-amber-800 dark:text-amber-300">
+          Uji coba alur happy-path seolah-olah admin toko telah memverifikasi bukti transfer dan menyetujui pesanan.
+        </p>
+        <button
+          type="button"
+          class="w-full py-2.5 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition flex items-center justify-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+          :disabled="isSimulatingPayment"
+          @click="handleSimulatePaymentSuccess"
+        >
+          <span v-if="isSimulatingPayment">Memproses Konfirmasi...</span>
+          <span v-else>⚡ Simulasikan Verifikasi Sukses (Auto-Approve)</span>
+        </button>
       </div>
     </div>
 

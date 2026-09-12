@@ -48,7 +48,7 @@
         :key="idx"
         class="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 group bg-slate-100 dark:bg-slate-950"
       >
-        <img :src="img" :alt="`Foto ${idx + 1}`" class="w-full h-full object-cover" />
+        <img :src="img" :alt="`Foto ${idx + 1}`" loading="lazy" class="w-full h-full object-cover" />
 
         <!-- Primary Badge on first item -->
         <span

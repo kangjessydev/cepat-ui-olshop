@@ -175,6 +175,7 @@ function handleExportCsv() {
                   <img
                     :src="customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(customer.name)}&background=10b981&color=fff`"
                     :alt="customer.name"
+                    loading="lazy"
                     class="w-10 h-10 rounded-full object-cover border border-gray-200 dark:border-gray-700 flex-shrink-0"
                   />
                   <div>

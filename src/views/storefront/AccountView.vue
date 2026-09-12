@@ -101,6 +101,7 @@ function formatDate(dateStr: string): string {
         <img
           :src="authStore.customer.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(authStore.customer.name)}&background=10b981&color=fff`"
           :alt="authStore.customer.name"
+          loading="lazy"
           class="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500 shadow-sm"
         />
         <div>
@@ -192,7 +193,7 @@ function formatDate(dateStr: string): string {
             :key="item.id"
             class="flex items-center gap-3 text-xs"
           >
-            <img :src="item.productImage" :alt="item.productName" class="w-12 h-12 rounded-xl object-cover" />
+            <img :src="item.productImage" :alt="item.productName" loading="lazy" class="w-12 h-12 rounded-xl object-cover" />
             <div class="flex-1 min-w-0">
               <p class="font-semibold text-gray-900 dark:text-gray-100 truncate">{{ item.productName }}</p>
               <p class="text-gray-400 text-[11px]">x{{ item.quantity }} • {{ formatRupiah(item.price) }}</p>

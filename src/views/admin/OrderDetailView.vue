@@ -328,6 +328,7 @@ function handleSaveNote() {
                       <img
                         :src="item.productImage"
                         :alt="item.productName"
+                        loading="lazy"
                         class="w-12 h-12 rounded-xl object-cover bg-gray-100 dark:bg-gray-700 border border-gray-100 dark:border-gray-800 flex-shrink-0"
                       />
                       <div>
@@ -408,6 +409,7 @@ function handleSaveNote() {
                 <img
                   :src="order.payment.proofImage"
                   alt="Bukti Transfer"
+                  loading="lazy"
                   class="h-28 w-44 object-cover rounded-lg border border-gray-200 dark:border-gray-700 shadow-xs group-hover:opacity-90 transition-opacity"
                 />
                 <div class="absolute inset-0 bg-black/30 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-semibold">
@@ -576,6 +578,7 @@ function handleSaveNote() {
         <img
           :src="order.payment.proofImage"
           alt="Bukti Transfer Penuh"
+          loading="lazy"
           class="max-h-[85vh] w-auto object-contain rounded-xl mx-auto"
         />
       </div>
