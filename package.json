@@ -1,7 +1,7 @@
 {
   "name": "cepat-ui-olshop",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Cepat UI Olshop — Vue 3 E-Commerce & Online Shop Starter Kit",
   "type": "module",
   "scripts": {
